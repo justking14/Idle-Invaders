@@ -1,0 +1,330 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>RPidle Reborn</title>
+     <link rel="stylesheet" href="main.css">
+</head>
+     <body>
+     <canvas id="canvas1"></canvas>
+
+               
+          <div id="container"></div>
+          <script src="data.js"></script>
+
+          <script src="code/utils/utils.js"></script>
+          <script src="code/utils/particles.js"></script>
+
+          <script src="code/utils/Timekeeper.js"></script>
+          <script src="code/utils/text.js"></script>
+          <script src="code/utils/sound.js"></script>
+
+          <script src="code/Status.js"></script>
+
+          <script src="code/menu/menuBase.js"> </script>
+          <script src="code/menu/optionMenu.js"> </script>
+          <script src="code/menu/skilltreeMenu.js"> </script>
+
+
+          <script src="code/store.js"> </script>
+
+          <script src="code/sprite/1_Body.js"></script>
+
+          <script src="code/UI/UI.js"></script>
+          <script src="code/UI/Gradient.js"></script>
+
+          <script src="code/sprite/2_Sprite.js"></script>
+          <script src="code/sprite/3_Agent.js"></script>
+                    <script src="code/sprite/4_Alien.js"></script>
+                    <script src="code/sprite/4_Player.js"></script>
+
+          
+
+
+          <script src="code/states/0_State.js"></script>
+          <script src="code/states/skillState.js"></script>
+
+          <script src="code/states/mapState.js"></script>
+          <script src="code/states/menuState.js"></script>
+     </body>
+</html>
+<script>
+     
+
+     
+var introCounter = 0
+function Game(w, h, targetFps, skipTitle) {
+     // Setup some constants
+     this.constants = {
+          width: w,
+          height: h,
+          targetFps: targetFps,
+          showFps: false
+     };
+
+     // Instantiate an empty state object
+     this.state = {};
+     this.state.entities = {}
+     this.state.agents = {}
+
+     this.state.currentState = new skillState("skillTree")
+
+     this.state.skillDict = {
+          "Speed1": {
+               cost: 5,
+               purchased: false
+          },
+          "Speed2a":{
+               cost: 10,
+               purchased: false 
+          },
+            "Speed2b": {
+               cost: 10,
+               purchased: false
+          },
+          "Speed3a":{
+               cost: 20,
+               purchased: false
+          },
+          "Speed3b": {
+               cost: 20,
+               purchased: false
+          },
+          "Speed4": {
+               cost: 100,
+               purchased: false
+          },
+
+
+          "Strength1": {
+               cost: 25,
+               purchased: false
+          },
+          "Strength2": {
+               cost: 50,
+               purchased: false
+          },
+          "Strength3": {
+               cost: 200,
+               purchased: false
+          },
+
+          "Upgrade1": {
+               cost: 50,
+               purchased: false
+          },
+          "Upgrade2": {
+               cost: 250,
+               purchased: false
+          },
+          "Upgrade3": {
+               cost: 500,
+               purchased: false
+          },
+     }
+     this.state.gold = 0;
+     
+     this.state.menu = new menuState()
+     
+     this.state.sounds = {playerHurt: new Sound("audio/hit1.wav"), enemyHurt: new Sound("audio/hit2.wav")}
+
+     this.viewport = generateCanvas(w, h);
+     this.state.context = this.viewport.getContext('2d');
+
+     // Append our viewport into a container in the dom
+     $container.insertBefore(this.viewport, $container.firstChild);
+
+     this.state.context.font = '32px Adventure';
+     this.state.context.fillStyle = '#fff';
+     this.state.context.textAlign = 'left';  // this is the default to align horizontally to the left
+     this.state.context.textBaseline = 'top';  // text will be aligned vertically to the top
+     
+     
+     this.state.eventKeeper = new GameClock(Math.floor(Date.now() / 1000), 0)
+     this.state.eventKeeper.addEvent({ name: "time", timeToTrigger: 0.5 })
+
+     this.state.timeLeft = new GameClock(Date.now(), 5)
+
+     this.update = gameUpdate(this);
+     this.render = gameRender(this);
+     this.loop = gameLoop(this);
+     
+
+     return this;
+}
+
+     
+$container = document.getElementById('container');
+
+
+window.game = new Game(1280, 720, 60, true);
+
+function dealWithEvent(event){
+     if(event.name === "time"){
+          window.game.state.timeLeft.update()
+          //console.log(window.game.state.timeLeft)
+          window.game.state.eventKeeper.addEvent({ name: "time", timeToTrigger: 0.5 })
+
+     }
+}
+
+
+function gameUpdate(scope) {
+     return function update(tFrame) {
+          var state = scope.state || {};
+
+          //state.timeLeft.update()
+          var events = state.eventKeeper.update()
+          for (var event in events) { dealWithEvent(events[event]) }
+
+
+          if(keysPressed.p === true || keysPressed.P === true){
+               delete keysPressed.p 
+               delete keysPressed.P
+
+          }
+          if(keysPressed.m === true || keysPressed.M === true){
+               delete keysPressed.m 
+               delete keysPressed.M
+               state.menu.onEnter(state)
+               state.menu.hidden = !state.menu.hidden
+          }
+          if(state.menu.hidden === false){
+               state.menu.dealWithInteraction(state, keysPressed)
+          }
+          state.currentState.dealWithInteraction(state, keysPressed)
+          state.currentState.update(state, scope.state.context)
+          return state;
+     }
+}
+
+function gameRender(scope) {
+     var w = scope.constants.width, h = scope.constants.height;
+     return function render() {
+               scope.state.context.clearRect(0, 0, w, h);
+               scope.state.context.fillRect(0,0,w,h)
+
+               // Spit out some text
+               scope.state.context.font = '32px Adventure';
+               scope.state.context.fillStyle = '#fff';
+               //scope.context.fillText('It\'s dangerous to travel this route alone.', 5, 50);
+
+               // If we want to show the FPS, then render it in the top right corner.
+               if (scope.constants.showFps) {
+                    scope.state.context.fillStyle = '#ff0';
+                    scope.state.context.fillText(scope.loop.fps, w - 100, 50);
+               }
+               scope.state.currentState.draw(scope.state.context, scope.state)
+               scope.state.currentState.miniDraw(scope.state.context, scope.state)
+
+               
+               if(scope.state.menu.hidden === false){
+                    scope.state.menu.draw(scope.state.context, scope.state)
+               }
+               
+               
+          
+     }
+}
+
+function gameLoop(scope) {
+     var loop = this;
+
+     // Initialize timer variables so we can calculate FPS
+     var fps = scope.constants.targetFps,
+          fpsInterval = 1000 / fps,
+          before = window.performance.now(),
+          // Set up an object to contain our alternating FPS calculations
+          cycles = {
+               new: {
+                    frameCount: 0,
+                    startTime: before,
+                    sinceStart: 0
+               },
+               old: {
+                    frameCount: 0,
+                    startTime: before,
+                    sineStart: 0
+               }
+          },
+          // Alternating Frame Rate vars
+          resetInterval = 5,
+          resetState = 'new';
+
+     loop.fps = 0;
+
+     // Main game rendering loop
+     loop.main = function mainLoop(tframe) {
+          // Request a new Animation Frame
+          // setting to `stopLoop` so animation can be stopped via
+          // `window.cancelAnimationFrame( loop.stopLoop )`
+          loop.stopLoop = window.requestAnimationFrame(loop.main);
+
+          // How long ago since last loop?
+          var now = tframe,
+               elapsed = now - before,
+               activeCycle, targetResetInterval;
+
+          // If it's been at least our desired interval, render
+          if (elapsed > fpsInterval) {
+               // Set before = now for next frame, also adjust for 
+               // specified fpsInterval not being a multiple of rAF's interval (16.7ms)
+               // ( http://stackoverflow.com/a/19772220 )
+               before = now - (elapsed % fpsInterval);
+
+               // Increment the vals for both the active and the alternate FPS calculations
+               for (var calc in cycles) {
+                    ++cycles[calc].frameCount;
+                    cycles[calc].sinceStart = now - cycles[calc].startTime;
+               }
+
+               // Choose the correct FPS calculation, then update the exposed fps value
+               activeCycle = cycles[resetState];
+               loop.fps = Math.round(1000 / (activeCycle.sinceStart / activeCycle.frameCount) * 100) / 100;
+
+               // If our frame counts are equal....
+               targetResetInterval = (cycles.new.frameCount === cycles.old.frameCount
+                    ? resetInterval * fps // Wait our interval
+                    : (resetInterval * 2) * fps); // Wait double our interval
+
+               // If the active calculation goes over our specified interval,
+               // reset it to 0 and flag our alternate calculation to be active
+               // for the next series of animations.
+               if (activeCycle.frameCount > targetResetInterval) {
+                    cycles[resetState].frameCount = 0;
+                    cycles[resetState].startTime = now;
+                    cycles[resetState].sinceStart = 0;
+
+                    resetState = (resetState === 'new' ? 'old' : 'new');
+               }
+
+               // Update the game state
+               scope.state = scope.update(now);
+               // Render the next frame
+               scope.render();
+          }
+     };
+
+     // Start off main loop
+     loop.main();
+
+     return loop;
+}
+var keysPressed = {}
+document.addEventListener('keydown', (event) => {
+     if ([32, 37, 38, 39, 40].indexOf(event.keyCode) > -1) {
+          event.preventDefault();
+     }
+     keysPressed[event.key] = true;
+});
+
+document.addEventListener('keyup', (event) => {
+     delete keysPressed[event.key];
+});
+
+
+
+
+</script>
