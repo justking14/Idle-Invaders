@@ -1,7 +1,7 @@
 class Alien {
      constructor(name, x, y, width, height, hpDefault) {
           //this.status = new StatusBuilder(name, classification).build()
-          this.sprite = new SpriteBuilder().setBody(new BodyBuilder().setXY(x, y).setSize(width, height).build()).setName("enemyD").build()
+          this.sprite = new SpriteBuilder().setBody(new BodyBuilder().setXY(x, y).setSize(width, height).build()).setName("enemyAlien").build()
 
           this.unlocked = true 
           this.hasAttacked = false

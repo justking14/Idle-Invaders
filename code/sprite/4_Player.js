@@ -1,9 +1,9 @@
 class Player {
      constructor(name, x, y, width, height, classification) {
           //this.status = new StatusBuilder(name, classification).build()
-          this.sprite = new SpriteBuilder().setBody(new BodyBuilder().setXY(x, y).setSize(width, height).build()).setName("enemyD").build()
-          this.sprite2 = new SpriteBuilder().setBody(new BodyBuilder().setXY(x - 400, y).setSize(width, height).build()).setName("enemyD").build()
-          this.sprite3 = new SpriteBuilder().setBody(new BodyBuilder().setXY(x + 400, y).setSize(width, height).build()).setName("enemyD").build()
+          this.sprite = new SpriteBuilder().setBody(new BodyBuilder().setXY(x, y).setSize(width, height).build()).setName("playerAlien").build()
+          this.sprite2 = new SpriteBuilder().setBody(new BodyBuilder().setXY(x - 400, y).setSize(width, height).build()).setName("playerAlien").build()
+          this.sprite3 = new SpriteBuilder().setBody(new BodyBuilder().setXY(x + 400, y).setSize(width, height).build()).setName("playerAlien").build()
 
           this.unlocked = true 
           this.hasAttacked = false
@@ -75,18 +75,19 @@ class Player {
                }
                var size = 20
                if (window.game.state.skillDict["Strength2"].purchased === true) {
-                    size = 50
+                    size = 40
                }
-               this.bullets.push(new Body(this.getPosition().x + this.getSize().x / 2 - size/1.5, this.getPosition().y - 20, size, size))
+
+               this.bullets.push(new Body(this.getPosition().x + this.getSize().x / 2 - size/2, this.getPosition().y - 30, size, size))
                this.bullets[this.bullets.length - 1].color = "black"
                          
                if (window.game.state.skillDict["Upgrade1"].purchased === true) {
-                    this.bullets.push(new Body(this.sprite2.getPosition().x + this.getSize().x / 2 - size/1.5, this.sprite2.getPosition().y - 20, size, size))
+                    this.bullets.push(new Body(this.sprite2.getPosition().x + this.getSize().x / 2 - size/2, this.sprite2.getPosition().y - 30, size, size))
                     this.bullets[this.bullets.length - 1].color = "black"
                }
                               
                if (window.game.state.skillDict["Upgrade2"].purchased === true) {
-                    this.bullets.push(new Body(this.sprite3.getPosition().x + this.getSize().x / 2 - size/1.5, this.sprite3.getPosition().y - 20, size, size))
+                    this.bullets.push(new Body(this.sprite3.getPosition().x + this.getSize().x / 2 - size/2, this.sprite3.getPosition().y - 30, size, size))
                     this.bullets[this.bullets.length - 1].color = "black"
                }
 

@@ -27,9 +27,10 @@ class skillState extends State {
 
           this.aliens = [] 
           this.hpDefault = 20
-          this.player = new Player("player", 1280 / 2, 600, 40, 40)
+          this.player = new Player("player", 1280 / 2, 625, 40, 40)
           //his.gold = 0
           this.circles = []
+          this.enemiesKilled = 0
      }
      draw(ctx, scope) {
 
@@ -77,7 +78,7 @@ class skillState extends State {
           ctx.fillStyle = "rgb(0,255,0)"
           ctx.strokeStyle = "rgb(0,255,0)"
           this.infoBody.draw(ctx, scope)
-          drawText(ctx, "Gold: " + window.game.state.gold, this.infoBody.pos.x + 20, this.infoBody.pos.y + 20, "black", false, 35)
+          drawText(ctx, "Gold: " + window.game.state.gold + " Enemies Killed: " + this.enemiesKilled , this.infoBody.pos.x + 20, this.infoBody.pos.y + 20, "black", false, 35)
 
                     ctx.fillColor = "black"
           ctx.fillStyle = "black"
@@ -113,7 +114,8 @@ class skillState extends State {
           this.eventKeeper.addEvent({ name: "makeStronger", timeToTrigger: 5.0, repeat: true })
 
           this.aliens = [] 
-          this.player = new Player("player", 1280/2, 600, 40, 40)
+          this.player = new Player("player", 1280 / 2, 625, 40, 40)
+          this.enemiesKilled = 0
 
      }
 
@@ -144,7 +146,8 @@ class skillState extends State {
                                    this.player.bullets[j].hidden = true
                                    if (this.aliens[i].health <= 0) {
                                         window.game.state.sounds.enemyHurt.play()
-                                        window.game.state.gold += 1
+                                        window.game.state.gold += Math.floor(Math.random() * 5)
+                                        this.enemiesKilled+=1
                                         this.aliens[i].hidden = true
                                    }
 
@@ -157,6 +160,7 @@ class skillState extends State {
                                                   this.aliens[k].health -= this.player.attack/2
                                                   if (this.aliens[k].health <= 0) {
                                                        window.game.state.gold += 1
+                                                       this.enemiesKilled+=1
                                                        this.aliens[k].hidden = true
                                                   }
                                              }
@@ -188,7 +192,7 @@ class skillState extends State {
                }
                this.eventKeeper.addEvent({ name: "move", timeToTrigger: time, repeat: false })
           } else if (event.name === "makeStronger") {
-               this.hpDefault*=1.5
+               this.hpDefault*=2
           }
      }
      dealWithInteraction(scope, event) {
